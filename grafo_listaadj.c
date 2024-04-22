@@ -54,7 +54,7 @@ bool existeAresta(int v1, int v2, Grafo *grafo) {
 
 Peso obtemPesoAresta(int v1, int v2, Grafo *grafo) {
     if (!(verificaValidadeVertice(v1, grafo) && verificaValidadeVertice(v2, grafo))) {
-        return ARESTA_NUlA;
+        return ARESTA_NULA;
     }
     Apontador q = grafo->listaAdj[v1];
     while (q) {
@@ -62,7 +62,7 @@ Peso obtemPesoAresta(int v1, int v2, Grafo *grafo) {
             return q->peso;
         }
     }
-    return ARESTA_NUlA;
+    return ARESTA_NULA;
 }
 
 bool removeArestaObtendoPeso(int v1, int v2, Peso* peso, Grafo *grafo) {
