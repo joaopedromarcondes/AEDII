@@ -61,14 +61,15 @@ bool removeArestaObtendoPeso(int v1, int v2, Peso* peso, Grafo *grafo) {
     if (!existeAresta(v1, v2, grafo)) {
         return false;
     }
-    peso = grafo->mat[v1][v2];
+    *peso = grafo->mat[v1][v2];
     grafo->mat[v1][v2] = ARESTA_NULA;
     grafo->numArestas--;
     return true;
 } 
 
 bool removeAresta(int v1, int v2, Grafo *grafo) {
-    Peso *peso = 0;
+    Peso *peso;
+    *peso = 0;
     return removeArestaObtendoPeso(v1, v2, peso, grafo);
 }
 
@@ -83,7 +84,8 @@ bool listaAdjVazia(int v, Grafo* grafo) {
 }
 
 Apontador proxListaAdj(int v, Grafo* grafo, Apontador atual) {
-    if (atual >= grafo->numVertices || atual < 0) atual = 0;
+    atual++;
+    if (atual >= grafo->numVertices || atual < 0) return VERTICE_INVALIDO;
     if (verificaValidadeVertice(v, grafo)) {
         int i;
         for (i = atual; i < grafo->numVertices; i++) {
@@ -100,7 +102,7 @@ Apontador primeiroListaAdj(int v, Grafo* grafo) {
 }
 
 int obtemVerticeDestino(Apontador p, Grafo* grafo) {
-    if (p) {
+    if (verificaValidadeVertice(p, grafo)) {
         return p;
     }
     return (-1);

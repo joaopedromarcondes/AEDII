@@ -67,6 +67,13 @@ void mostrarFila(FILA* f) {
     printf("\n");
 }
 
+// Mostra o caminhos ate o vertice atual recursivamente.
+void mostrar_caminhos(int* antecessores, int tam, int atual) {
+    if (atual >= tam || atual < 0) return;
+    mostrar_caminhos(antecessores, tam, antecessores[atual]);
+    printf("%d ", atual);
+}
+
 void visitaBP(Grafo* g, int v, cor* cores, int* antecessores) {
     cores[v] = CINZA;
     Apontador atual = primeiroListaAdj(v, g);
@@ -76,6 +83,7 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores) {
         u = obtemVerticeDestino(atual, g);
         if (u < 0 || u >= obtemNrVertices(g)) break;
         if (cores[u] == BRANCO) {
+            antecessores[u] = v;
             visitaBP(g, u, cores, antecessores);
         }
         atual = proxListaAdj(v, g, atual);
@@ -93,16 +101,22 @@ void buscaProfundidade(Grafo* g) {
         cores[i] = BRANCO;
         antecessores[i] = -1;
     }
-
+    printf("BP:\n");
     int j;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
             visitaBP(g, j, cores, antecessores);
         }
-    }  
+    } 
+    printf("\nCaminhos BP: \n");
+    int k;
+    for (k=0; k < nv; k++) {
+        mostrar_caminhos(antecessores, nv, k);
+        printf("\n");
+    }
 }
 
-void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* caminhos) {
+void visitaBL(Grafo* g, int v, cor* cores, int* antecessores) {
     FILA f;
     inicializarFila(&f);
     adicionarFila(&f, v);
@@ -118,13 +132,12 @@ void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* caminhos) {
             if (cores[vaux] == BRANCO) {
                 cores[vaux] = CINZA;
                 adicionarFila(&f, vaux);
+                antecessores[vaux] = atual;
             } 
             aux = proxListaAdj(atual, g, aux);
         }
-        //printf("%d ", atual);
-        printf("\n");
         cores[atual] = PRETO;
-
+        printf("%d ", atual);
     }
 
 }
@@ -134,20 +147,25 @@ void buscaLargura(Grafo* g) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
     int* antecessores = (int*) malloc(sizeof(int)*nv);
-    int* caminhos = (int*) malloc(sizeof(int)*nv);
     int i;
     for (i = 0; i < nv; i++) {
         cores[i] = BRANCO;
         antecessores[i] = -1;
-        caminhos[i] = -1;
     }
+    printf("BL:\n");
 
     int j;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBL(g, j, cores, antecessores, caminhos);
+            visitaBL(g, j, cores, antecessores);
         }
-    }  
+    } 
+    int k;
+    printf("\nCaminhos BL: \n");
+    for (k=0; k < nv; k++) {
+        mostrar_caminhos(antecessores, nv, k);
+        printf("\n");
+    }
 }
 
 int main() {
@@ -178,9 +196,9 @@ int main() {
     adj = proxListaAdj(3, &g, adj);
     printf("Terceiro adj: %d\n", obtemVerticeDestino(adj, &g));
     adj = proxListaAdj(3, &g, adj);
-    printf("Quarto adj: %d\n", obtemVerticeDestino(adj, &g));   */ 
-    //buscaProfundidade(&g);
+    printf("Quarto adj: %d\n", obtemVerticeDestino(adj, &g));    */
+    buscaProfundidade(&g);
     buscaLargura(&g);
-
+    //imprimeGrafo(&g);
     return 0;
 }
