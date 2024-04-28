@@ -74,7 +74,22 @@ void mostrar_caminhos(int* antecessores, int tam, int atual) {
     printf("%d ", atual);
 }
 
-void visitaBP(Grafo* g, int v, cor* cores, int* antecessores) {
+void mostrar_componentes_conectados(int* componentes_conectados, int nv) {
+    printf("Componentes Conectados: \n");
+    int i, j, cont = 0;
+    for (i = 0; i < nv && cont < nv; i++) {
+        printf("C%d: ", i+1);
+        for (j = 0; j < nv; j++) {
+            if (componentes_conectados[j] == i) {
+                printf("%d ", j);
+                cont++;
+            }
+        }
+        printf("\n");
+    }
+}
+
+void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_conectados, int contador) {
     cores[v] = CINZA;
     Apontador atual = primeiroListaAdj(v, g);
     int u;
@@ -84,15 +99,15 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores) {
         if (u < 0 || u >= obtemNrVertices(g)) break;
         if (cores[u] == BRANCO) {
             antecessores[u] = v;
-            visitaBP(g, u, cores, antecessores);
+            visitaBP(g, u, cores, antecessores, componentes_conectados, contador);
         }
         atual = proxListaAdj(v, g, atual);
     }
-    
+    componentes_conectados[v] = contador;
     cores[v] = PRETO;
 }
 
-void buscaProfundidade(Grafo* g) {
+void buscaProfundidade(Grafo* g, int* componentes_conectados) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
     int* antecessores = (int*) malloc(sizeof(int)*nv);
@@ -102,10 +117,11 @@ void buscaProfundidade(Grafo* g) {
         antecessores[i] = -1;
     }
     printf("BP:\n");
-    int j;
+    int j, contador = 0;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBP(g, j, cores, antecessores);
+            visitaBP(g, j, cores, antecessores, componentes_conectados, contador);
+            contador++;
         }
     } 
     printf("\nCaminhos BP: \n");
@@ -197,8 +213,10 @@ int main() {
     printf("Terceiro adj: %d\n", obtemVerticeDestino(adj, &g));
     adj = proxListaAdj(3, &g, adj);
     printf("Quarto adj: %d\n", obtemVerticeDestino(adj, &g));    */
-    buscaProfundidade(&g);
+    int* componentes_conectados = (int*) malloc(sizeof(int)*nv);
     buscaLargura(&g);
+    buscaProfundidade(&g, componentes_conectados);
+    mostrar_componentes_conectados(componentes_conectados, nv);
     //imprimeGrafo(&g);
     return 0;
 }
