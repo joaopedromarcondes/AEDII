@@ -89,17 +89,33 @@ void mostrar_componentes_conectados(int* componentes_conectados, int nv) {
     }
 }
 
-void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_conectados, int contador) {
+void mostrar_busca(int* antecessores, int nv, bool eh_BP, int* ordem) {
+    char bp_or_bl = 'P';
+    int k;
+    if (!eh_BP) bp_or_bl = 'L';
+    printf("B%c: \n", bp_or_bl);
+    for (k=0; k < nv; k++) {
+        printf("%d ", ordem[k]);
+    }
+    printf("\nCaminhos B%c: \n", bp_or_bl);
+    for (k=0; k < nv; k++) {
+        mostrar_caminhos(antecessores, nv, k);
+        printf("\n");
+    }
+}
+
+void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_conectados, int contador, int* tempo_de_encontro, int* ordem) {
     cores[v] = CINZA;
     Apontador atual = primeiroListaAdj(v, g);
     int u;
-    printf("%d ", v);
+    ordem[*tempo_de_encontro] = v;
+    (*tempo_de_encontro)++;
     while (atual != VERTICE_INVALIDO) {
         u = obtemVerticeDestino(atual, g);
         if (u < 0 || u >= obtemNrVertices(g)) break;
         if (cores[u] == BRANCO) {
             antecessores[u] = v;
-            visitaBP(g, u, cores, antecessores, componentes_conectados, contador);
+            visitaBP(g, u, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem);
         }
         atual = proxListaAdj(v, g, atual);
     }
@@ -107,29 +123,24 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_c
     cores[v] = PRETO;
 }
 
-void buscaProfundidade(Grafo* g, int* componentes_conectados) {
+void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores, int* ordem) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
-    int* antecessores = (int*) malloc(sizeof(int)*nv);
     int i;
     for (i = 0; i < nv; i++) {
         cores[i] = BRANCO;
         antecessores[i] = -1;
     }
-    printf("BP:\n");
     int j, contador = 0;
+    int* tempo_de_encontro = (int*) malloc(sizeof(int));
+    *tempo_de_encontro = 0;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBP(g, j, cores, antecessores, componentes_conectados, contador);
+            visitaBP(g, j, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem);
             contador++;
         }
     } 
-    printf("\nCaminhos BP: \n");
-    int k;
-    for (k=0; k < nv; k++) {
-        mostrar_caminhos(antecessores, nv, k);
-        printf("\n");
-    }
+    
 }
 
 void visitaBL(Grafo* g, int v, cor* cores, int* antecessores) {
@@ -214,9 +225,14 @@ int main() {
     adj = proxListaAdj(3, &g, adj);
     printf("Quarto adj: %d\n", obtemVerticeDestino(adj, &g));    */
     int* componentes_conectados = (int*) malloc(sizeof(int)*nv);
+    int* antecessores_bp = (int*) malloc(sizeof(int)*nv);
+    int* ordem_bp = (int*) malloc(sizeof(int)*nv);
+    
     buscaLargura(&g);
-    buscaProfundidade(&g, componentes_conectados);
+    buscaProfundidade(&g, componentes_conectados, antecessores_bp, ordem_bp);
+    
+    mostrar_busca(antecessores_bp, nv, true, ordem_bp);
     mostrar_componentes_conectados(componentes_conectados, nv);
-    //imprimeGrafo(&g);
+    
     return 0;
 }
