@@ -23,6 +23,66 @@ typedef struct {
     NO* fim;
 } FILA;
 
+typedef struct vert_aux {
+    struct vert_aux* prox;
+    int v;
+    int u;
+} NO_VERTICES_DE_RETORNO;
+
+typedef struct {
+    NO_VERTICES_DE_RETORNO* inicio;
+    int qnt;
+} LISTA_VERTICES_DE_RETORNO;
+
+void inicializarLista(LISTA_VERTICES_DE_RETORNO* l) {
+    l->inicio = NULL;
+    l->qnt = 0;
+}
+
+void adicionarLista(LISTA_VERTICES_DE_RETORNO* l, int v, int u) {
+    NO_VERTICES_DE_RETORNO* p = l->inicio;
+    NO_VERTICES_DE_RETORNO* ant = NULL;
+    while (p) {
+        ant = p;
+        p = p->prox;
+    }
+    NO_VERTICES_DE_RETORNO* novo = (NO_VERTICES_DE_RETORNO*) malloc(sizeof(NO_VERTICES_DE_RETORNO));
+    novo->u = u;
+    novo->v = v;
+    novo->prox = NULL;
+    if (ant) {
+        ant->prox = novo;
+    } else {
+        l->inicio = novo;
+    }
+    
+}
+
+void removerLista(LISTA_VERTICES_DE_RETORNO* l, int u, int v) {
+    NO_VERTICES_DE_RETORNO* p = l->inicio;
+    NO_VERTICES_DE_RETORNO* ant = NULL;
+    while (p) {
+        if (p->u == u && p->v == v) break;
+        ant = p;
+        p = p->prox;
+    }
+    if (ant) {
+        ant->prox = p->prox;
+    } else {
+        l->inicio = p->prox;
+    }
+    free(p);
+}
+
+bool acharNaLista(LISTA_VERTICES_DE_RETORNO* l, int u) {
+    NO_VERTICES_DE_RETORNO* p = l->inicio;
+    while (p) {
+        if (p->u == u) return true;
+        p = p->prox;
+    }
+    return false;
+}
+
 void inicializarFila(FILA* f) {
     f->inicio = NULL;
     f->fim = NULL;
