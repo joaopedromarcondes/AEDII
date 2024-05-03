@@ -97,17 +97,28 @@ void mostrar_busca(int* antecessores, int nv, bool eh_BP, int* ordem) {
     for (k=0; k < nv; k++) {
         printf("%d ", ordem[k]);
     }
-    printf("\nCaminhos B%c: \n", bp_or_bl);
+    printf("\nCaminhos B%c : \n", bp_or_bl);
     for (k=0; k < nv; k++) {
         mostrar_caminhos(antecessores, nv, k);
         printf("\n");
     }
 }
 
-void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_conectados, int contador, int* tempo_de_encontro, int* ordem) {
+void mostrar_vertices_de_articulacao(bool* vertices_de_articulacao, int nv) {
+    printf("Vertices de articulacao: \n");
+    int i;
+    for (i = 0; i<nv; i++) {
+        if (vertices_de_articulacao[i]) printf("%d ", i);
+    }
+    printf("\n");
+}
+// Retorna um inteiro que eh um peso correspondente a quantas arestas de avanco - arestas de retorno tem.
+int visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_conectados, int contador, int* tempo_de_encontro, int* ordem, bool* vertices_de_articulacao, bool eh_raiz) {
     cores[v] = CINZA;
     Apontador atual = primeiroListaAdj(v, g);
     int u;
+    int peso_retorno = 0, peso_retorno_aux = 0;
+    int cont = 0;
     ordem[*tempo_de_encontro] = v;
     (*tempo_de_encontro)++;
     while (atual != VERTICE_INVALIDO) {
@@ -115,29 +126,45 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_c
         if (u < 0 || u >= obtemNrVertices(g)) break;
         if (cores[u] == BRANCO) {
             antecessores[u] = v;
-            visitaBP(g, u, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem);
+            peso_retorno_aux = visitaBP(g, u, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem, vertices_de_articulacao, false);
+            if (peso_retorno_aux == 0) {
+                vertices_de_articulacao[v] = true;
+            }
+            peso_retorno += peso_retorno_aux;
+            cont++;
+            printf("PESO %d da subarvore de %d\n", peso_retorno_aux, v);
+        } else if (cores[u] == CINZA && u != antecessores[v]) {
+            peso_retorno++;
+        } else if (cores[u] == PRETO) {
+            peso_retorno--;
         }
         atual = proxListaAdj(v, g, atual);
     }
     componentes_conectados[v] = contador;
     cores[v] = PRETO;
+    if (eh_raiz && cont > 1) vertices_de_articulacao[v] = true;
+    return peso_retorno;
 }
 
-void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores, int* ordem) {
+void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores, int* ordem, bool* vertices_de_articulacao) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
+
+    // inicializa vetores
     int i;
     for (i = 0; i < nv; i++) {
         cores[i] = BRANCO;
         antecessores[i] = -1;
+        vertices_de_articulacao[i] = false;
     }
     int j, contador = 0;
     int* tempo_de_encontro = (int*) malloc(sizeof(int));
     *tempo_de_encontro = 0;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBP(g, j, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem);
+            visitaBP(g, j, cores, antecessores, componentes_conectados, contador, tempo_de_encontro, ordem, vertices_de_articulacao, true);
             contador++;
+            
         }
     } 
     
@@ -200,7 +227,7 @@ int main() {
 
     FILE *fp;
 
-    fp = fopen("entrada2.txt", "r");
+    fp = fopen("entrada1.txt", "r");
     int nv, na; // nv - numero de vertices, na - numero de arestasg
     fscanf(fp, "%d %d\n", &nv, &na);
 
@@ -227,12 +254,14 @@ int main() {
     int* componentes_conectados = (int*) malloc(sizeof(int)*nv);
     int* antecessores_bp = (int*) malloc(sizeof(int)*nv);
     int* ordem_bp = (int*) malloc(sizeof(int)*nv);
+    bool* vertices_de_articulacao = (bool*) malloc(sizeof(bool)*nv);
     
     buscaLargura(&g);
-    buscaProfundidade(&g, componentes_conectados, antecessores_bp, ordem_bp);
+    buscaProfundidade(&g, componentes_conectados, antecessores_bp, ordem_bp, vertices_de_articulacao);
     
     mostrar_busca(antecessores_bp, nv, true, ordem_bp);
     mostrar_componentes_conectados(componentes_conectados, nv);
+    mostrar_vertices_de_articulacao(vertices_de_articulacao, nv);
     
     return 0;
 }
