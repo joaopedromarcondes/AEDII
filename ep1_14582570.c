@@ -183,13 +183,14 @@ void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores,
     
 }
 
-void visitaBL(Grafo* g, int v, cor* cores, int* antecessores) {
+void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* ordem_bl) {
     FILA f;
     inicializarFila(&f);
     adicionarFila(&f, v);
     int atual;
     Apontador aux;
     int vaux;
+    int contador = 0;
 
     while (verificaFilaVazia(&f)) {
         atual = removerFila(&f);
@@ -204,13 +205,14 @@ void visitaBL(Grafo* g, int v, cor* cores, int* antecessores) {
             aux = proxListaAdj(atual, g, aux);
         }
         cores[atual] = PRETO;
-        printf("%d ", atual);
+        ordem_bl[contador] = atual;
+        contador++;
     }
 
 }
 
 
-void buscaLargura(Grafo* g, int* antecessores) {
+void buscaLargura(Grafo* g, int* antecessores, int* ordem_bl) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
     int i;
@@ -218,20 +220,14 @@ void buscaLargura(Grafo* g, int* antecessores) {
         cores[i] = BRANCO;
         antecessores[i] = -1;
     }
-    printf("BL:\n");
 
     int j;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBL(g, j, cores, antecessores);
+            visitaBL(g, j, cores, antecessores, ordem_bl);
         }
     } 
     int k;
-    printf("\nCaminhos BL: \n");
-    for (k=0; k < nv; k++) {
-        mostrar_caminhos(antecessores, nv, k);
-        printf("\n");
-    }
 }
 
 int main() {
@@ -269,9 +265,12 @@ int main() {
     bool* vertices_de_articulacao = (bool*) malloc(sizeof(bool)*nv);
 
     int* antecessores_bl = (int*) malloc(sizeof(int)*nv);
+    int* ordem_bl = (int*) malloc(sizeof(int)*nv);
     
-    buscaLargura(&g, antecessores_bl);
+    buscaLargura(&g, antecessores_bl, ordem_bl);
     buscaProfundidade(&g, componentes_conectados, antecessores_bp, ordem_bp, vertices_de_articulacao);
+
+    mostrar_busca(antecessores_bl, nv, false, ordem_bl);
     
     mostrar_busca(antecessores_bp, nv, true, ordem_bp);
     mostrar_componentes_conectados(componentes_conectados, nv);
