@@ -58,60 +58,60 @@ bool verificaFilaVazia(FILA* f) {
     return (f->inicio);
 }
 
-void mostrarFila(FILA* f) {
+void mostrarFila(FILA* f, FILE* fp) {
     NO* aux = f->inicio;
-    printf("FILA: ");
+    fprintf(fp, "FILA: ");
     while (aux) {
-        printf("%d ", aux->vertice);
+        fprintf(fp, "%d ", aux->vertice);
         aux = aux->prox;
     }
-    printf("\n");
+    fprintf(fp, "\n");
 }
 
 // Mostra o caminhos ate o vertice atual recursivamente.
-void mostrar_caminhos(int* antecessores, int tam, int atual) {
+void mostrar_caminhos(int* antecessores, int tam, int atual, FILE* fp) {
     if (atual >= tam || atual < 0) return;
-    mostrar_caminhos(antecessores, tam, antecessores[atual]);
-    printf("%d ", atual);
+    mostrar_caminhos(antecessores, tam, antecessores[atual], fp);
+    fprintf(fp, "%d ", atual);
 }
 
-void mostrar_componentes_conectados(int* componentes_conectados, int nv) {
-    printf("Componentes Conectados: \n");
+void mostrar_componentes_conectados(int* componentes_conectados, int nv, FILE* fp) {
+    fprintf(fp, "Componentes Conectados: \n");
     int i, j, cont = 0;
     for (i = 0; i < nv && cont < nv; i++) {
-        printf("C%d: ", i+1);
+        fprintf(fp, "C%d: ", i+1);
         for (j = 0; j < nv; j++) {
             if (componentes_conectados[j] == i) {
-                printf("%d ", j);
+                fprintf(fp, "%d ", j);
                 cont++;
             }
         }
-        printf("\n");
+        fprintf(fp, "\n");
     }
 }
 
-void mostrar_busca(int* antecessores, int nv, bool eh_BP, int* ordem) {
+void mostrar_busca(int* antecessores, int nv, bool eh_BP, int* ordem, FILE* fp) {
     char bp_or_bl = 'P';
     int k;
     if (!eh_BP) bp_or_bl = 'L';
-    printf("B%c: \n", bp_or_bl);
+    fprintf(fp, "B%c: \n", bp_or_bl);
     for (k=0; k < nv; k++) {
-        printf("%d ", ordem[k]);
+        fprintf(fp, "%d ", ordem[k]);
     }
-    printf("\nCaminhos B%c: \n", bp_or_bl);
+    fprintf(fp, "\n\nCaminhos B%c: \n", bp_or_bl);
     for (k=0; k < nv; k++) {
-        mostrar_caminhos(antecessores, nv, k);
-        printf("\n");
+        mostrar_caminhos(antecessores, nv, k, fp);
+        fprintf(fp, "\n");
     }
 }
 
-void mostrar_vertices_de_articulacao(bool* vertices_de_articulacao, int nv) {
-    printf("Vertices de articulacao:\n");
+void mostrar_vertices_de_articulacao(bool* vertices_de_articulacao, int nv, FILE* fp) {
+    fprintf(fp, "Vertices de articulacao:\n");
     int i;
     for (i = 0; i < nv; i++) {
-        if (vertices_de_articulacao[i]) printf("%d ", i);
+        if (vertices_de_articulacao[i]) fprintf(fp, "%d ", i);
     }
-    printf("\n");
+    fprintf(fp, "\n");
 }
 
 int min(int a, int b) {
@@ -126,7 +126,6 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_c
     ordem[*tempo_de_encontro] = v;
     tempo_de_descoberta[v] = *tempo_de_encontro;
     low[v] = *tempo_de_encontro;
-    //printf("vertice: %d low: %d\n", v, low[v]);
     (*tempo_de_encontro)++;
     int contador_de_filhos = 0;
     while (atual != VERTICE_INVALIDO) {
@@ -155,7 +154,6 @@ void visitaBP(Grafo* g, int v, cor* cores, int* antecessores, int* componentes_c
         vertices_de_articulacao[v] = true;
     }
     
-    //printf("vertice: %d tempo: %d low: %d\n", v, tempo_de_descoberta[v], low[v]);
 }
 
 void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores, int* ordem, bool* vertices_de_articulacao) {
@@ -183,14 +181,13 @@ void buscaProfundidade(Grafo* g, int* componentes_conectados, int* antecessores,
     
 }
 
-void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* ordem_bl) {
+void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* ordem_bl, int* contador) {
     FILA f;
     inicializarFila(&f);
     adicionarFila(&f, v);
     int atual;
     Apontador aux;
     int vaux;
-    int contador = 0;
 
     while (verificaFilaVazia(&f)) {
         atual = removerFila(&f);
@@ -205,8 +202,8 @@ void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* ordem_bl) {
             aux = proxListaAdj(atual, g, aux);
         }
         cores[atual] = PRETO;
-        ordem_bl[contador] = atual;
-        contador++;
+        ordem_bl[*contador] = atual;
+        (*contador)++;
     }
 
 }
@@ -215,6 +212,8 @@ void visitaBL(Grafo* g, int v, cor* cores, int* antecessores, int* ordem_bl) {
 void buscaLargura(Grafo* g, int* antecessores, int* ordem_bl) {
     int nv = obtemNrVertices(g);
     cor* cores = (cor*) malloc(sizeof(cor)*nv);
+    int* contador = (int*) malloc(sizeof(int));
+    *contador = 0;
     int i;
     for (i = 0; i < nv; i++) {
         cores[i] = BRANCO;
@@ -224,19 +223,23 @@ void buscaLargura(Grafo* g, int* antecessores, int* ordem_bl) {
     int j;
     for (j = 0; j < nv; j++) {
         if (cores[j] == BRANCO) {
-            visitaBL(g, j, cores, antecessores, ordem_bl);
+            visitaBL(g, j, cores, antecessores, ordem_bl, contador);
         }
     } 
-    int k;
 }
 
-int main() {
-    
+int main(int argc, char *argv[ ] ) {
+    if (argc != 3) {
+        fprintf(stderr, "ERRO na passagem de valores por linha decomando.\n");
+        return 1;
+    }
+    char* arquivo_de_entrada = argv[1];
+    char* arquivo_de_saida = argv[2];
 
     FILE *fp;
 
-    fp = fopen("entrada1.txt", "r");
-    int nv, na; // nv - numero de vertices, na - numero de arestasg
+    fp = fopen(arquivo_de_entrada, "r");
+    int nv, na; // nv - numero de vertices, na - numero de arestas
     fscanf(fp, "%d %d\n", &nv, &na);
 
     Grafo g;
@@ -249,16 +252,12 @@ int main() {
         insereAresta(v1, v2, peso, &g);
         insereAresta(v2, v1, peso, &g);
     }
+
+    fclose(fp);
+
+    fp = fopen(arquivo_de_saida, "w");
  
-    /* imprimeGrafo(&g);
-    Apontador adj = primeiroListaAdj(3, &g);
-    printf("Primeiro adj: %d\n", obtemVerticeDestino(adj, &g));
-    adj = proxListaAdj(3, &g, adj);
-    printf("Segundo adj: %d\n", obtemVerticeDestino(adj, &g));
-    adj = proxListaAdj(3, &g, adj);
-    printf("Terceiro adj: %d\n", obtemVerticeDestino(adj, &g));
-    adj = proxListaAdj(3, &g, adj);
-    printf("Quarto adj: %d\n", obtemVerticeDestino(adj, &g));    */
+    
     int* componentes_conectados = (int*) malloc(sizeof(int)*nv);
     int* antecessores_bp = (int*) malloc(sizeof(int)*nv);
     int* ordem_bp = (int*) malloc(sizeof(int)*nv);
@@ -270,11 +269,13 @@ int main() {
     buscaLargura(&g, antecessores_bl, ordem_bl);
     buscaProfundidade(&g, componentes_conectados, antecessores_bp, ordem_bp, vertices_de_articulacao);
 
-    mostrar_busca(antecessores_bl, nv, false, ordem_bl);
-    
-    mostrar_busca(antecessores_bp, nv, true, ordem_bp);
-    mostrar_componentes_conectados(componentes_conectados, nv);
-    mostrar_vertices_de_articulacao(vertices_de_articulacao, nv);
+    mostrar_busca(antecessores_bl, nv, false, ordem_bl, fp);
+    fprintf(fp, "\n");
+    mostrar_busca(antecessores_bp, nv, true, ordem_bp, fp);
+    fprintf(fp, "\n");
+    mostrar_componentes_conectados(componentes_conectados, nv, fp);
+    fprintf(fp, "\n");
+    mostrar_vertices_de_articulacao(vertices_de_articulacao, nv, fp); 
     
     return 0;
 }
